@@ -68,10 +68,10 @@ class Server:
     def __update(self, delta):
         for cid in range(len(self.clients)):
             client = self.clients[cid]
-            responses = pycharon.com.recv(client)
-            if responses != []:
-                for response in responses:
-                    self.on_packet(cid, response)
+            packets = pycharon.com.recv(client)
+            if packets != []:
+                for packet in packets:
+                    self.on_packet(cid, packet)
 
         self.update(delta)
 
