@@ -5,6 +5,8 @@ import time
 import pycharon.com
 
 
+INT_TYPE = int(1)
+
 class Server:
     def __init__(self, port, max_clients, logs_on = True):
         self.ip = ""
@@ -22,16 +24,24 @@ class Server:
         if self.logs_on:
             print("[{}] ".format( datetime.now().time() ) + message)
 
+    def send(self, client_or_id, data): # you can pass a socket or int id as arg
+        if type(client_or_id) == INT_TYPE:
+            pycharon.com.send(self.clients[client_or_id], data)
+        else:
+            pycharon.com.send(client_or_id, data)
+
     def start(self):
         self.log("Starting server...")
 
         self.socket.bind((self.ip, self.port))
         self.running = True
 
-        tl = Thread(target=self.__listen_caller)
-        tm = Thread(target=self.__update_caller)
-        tl.start()
-        tm.start()
+        handle_clients_caller_thread = Thread(target=self.__handle_clients_caller)
+        update_caller_thread = Thread(target=self.__update_caller)
+        handle_packets_caller_thread = Thread(target=self.__handle_packets_caller)
+        handle_clients_caller_thread.start()
+        update_caller_thread.start()
+        handle_packets_caller_thread.start()
 
         self.log("Done!")
 
@@ -45,10 +55,33 @@ class Server:
         self.pause()
         self.running = False
 
-    def __listen_caller(self):
+    def __handle_clients_caller(self):
         while self.running:
             while not self.paused:
-                self.__listen()
+                self.__handle_clients()
+
+    def __handle_clients(self):
+        if len(self.clients) < self.max_clients:
+            self.socket.listen()
+            c, a = self.socket.accept()
+            self.log("New connection {}".format(a))
+            self.clients.append(c)
+
+    def __handle_packets_caller(self):
+        while self.running:
+            while not self.paused:
+                self.__handle_packets()
+
+    def __handle_packets(self):
+        for cid in range(len(self.clients)):
+            client = self.clients[cid]
+            packets = pycharon.com.recv(client)
+            if packets != []:
+                for packet in packets:
+                    self.on_packet(cid, packet)
+
+    def on_packet(self, client_id, packet):
+        self.log("New packet from client with id {}: {}".format(client_id, packet))
 
     def __update_caller(self):
         delta = 0
@@ -58,25 +91,8 @@ class Server:
                 self.__update(delta)
                 delta = time.time() - update_start
 
-    def __listen(self):
-        if len(self.clients) < self.max_clients:
-            self.socket.listen()
-            c, a = self.socket.accept()
-            self.log("New connection {}".format(a))
-            self.clients.append(c)
-
     def __update(self, delta):
-        for cid in range(len(self.clients)):
-            client = self.clients[cid]
-            packets = pycharon.com.recv(client)
-            if packets != []:
-                for packet in packets:
-                    self.on_packet(cid, packet)
-
         self.update(delta)
-
-    def on_packet(self, client_id, packet):
-        self.log("New packet from client with id {}: {}".format(client_id, packet))
 
     def update(self, delta):
         pass

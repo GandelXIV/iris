@@ -10,9 +10,28 @@ class Client:
 
     def connect(self, ip, port):
         self.socket.connect((ip, port))
+        self.socket.setblocking(False)
         self.connected = True
-        t = Thread(target=self.__update_caller)
-        t.start()
+        update_caller_thread = Thread(target=self.__update_caller)
+        handle_packets_caller_thread = Thread(target=self.__handle_packets_caller)
+        update_caller_thread.start()
+        handle_packets_caller_thread.start()
+
+    def send(self, data):
+        pycharon.com.send(self.socket, data)
+
+    def __handle_packets_caller(self):
+        while self.connected:
+            self.__handle_packets()
+
+    def __handle_packets(self):
+        packets = pycharon.com.recv(self.socket)
+        if packets != []:
+            for packet in packets:
+                self.on_packet(packet)
+
+    def on_packet(self, packet):
+        print(packet)
 
     def __update_caller(self):
         delta = 0
@@ -22,15 +41,7 @@ class Client:
             delta = time.time() - start_update
 
     def __update(self, delta):
-        packets = pycharon.com.recv(self.socket)
-        if packets != []:
-            for packet in packets:
-                self.on_packet(packet)
-
         self.update(delta)
-
-    def on_packet(self, packet):
-        print(packet)
 
     def update(self, delta):
         pass

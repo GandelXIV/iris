@@ -2,14 +2,27 @@
 #sys.path.insert(0, "pycharon")
 
 import pycharon
-from socket import gethostname
 from random import randint
 
-IP = gethostname()
-PORT = 53000 + randint(0, 100)
+IP = "localhost"
+PORT = 53001
 
-server = pycharon.server.Server(PORT, 10)
-client = pycharon.client.Client()
+class MyClient(pycharon.client.Client):
+    def update(self, delta):
+        self.send(input())
 
-server.start()
-client.connect(IP, PORT)
+    def on_packet(self, packet):
+        print(packet)
+
+class MyServer(pycharon.server.Server):
+    def on_packet(self, client_id, packet):
+        for client in self.clients:
+            self.send(client, packet)
+
+
+if input("server/client:") == "server":
+    server = MyServer(PORT, 10)
+    server.start()
+else:
+    client = MyClient()
+    client.connect(IP, PORT)

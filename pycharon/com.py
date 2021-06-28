@@ -7,7 +7,9 @@ def send(target_socket, data):
 
 def recv(target_socket, buffer=1024):
     packets = []
-    raw = target_socket.recv(buffer)
+    try:
+        raw = target_socket.recv(buffer)
+    except BlockingIOError: return []
     if raw == b'':
         return packets
     for packet in raw.split(PICKLE_SEPARATOR)[:-1]:
