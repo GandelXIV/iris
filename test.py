@@ -13,7 +13,7 @@ class MyClient(iris.client.Client):
         self.send(input())
 
     def on_packet(self, packet):
-        print(packet)
+        print("new message from the server:", packet)
 
 class MyServer(iris.server.Server):
     def on_packet(self, client_id, packet):
