@@ -3,6 +3,7 @@
 
 import iris
 from random import randint
+from threading import Thread
 
 IP = "localhost"
 PORT = 53001
@@ -20,9 +21,17 @@ class MyServer(iris.server.Server):
             self.send(client, packet)
 
 
-if input("server/client:") == "server":
-    server = MyServer(PORT, 10)
-    server.start()
-else:
-    client = MyClient()
+server = MyServer(PORT, 10)
+client = MyClient()
+
+def start_client():
     client.connect(IP, PORT)
+
+def start_server():
+    server.start()
+
+client_thread = Thread(target=start_client)
+server_thread = Thread(target=start_server)
+
+server_thread.start()
+client_thread.start()
