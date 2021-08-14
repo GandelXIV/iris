@@ -2,7 +2,7 @@ import socket
 from datetime import datetime
 from threading import Thread
 import time
-import pycharon.com
+import iris.com
 
 
 INT_TYPE = int(1)
@@ -26,9 +26,9 @@ class Server:
 
     def send(self, client_or_id, data): # you can pass a socket or int id as arg
         if type(client_or_id) == INT_TYPE:
-            pycharon.com.send(self.clients[client_or_id], data)
+            iris.com.send(self.clients[client_or_id], data)
         else:
-            pycharon.com.send(client_or_id, data)
+            iris.com.send(client_or_id, data)
 
     def start(self):
         self.log("Starting server...")
@@ -75,7 +75,7 @@ class Server:
     def __handle_packets(self):
         for cid in range(len(self.clients)):
             client = self.clients[cid]
-            packets = pycharon.com.recv(client)
+            packets = iris.com.recv(client)
             if packets != []:
                 for packet in packets:
                     self.on_packet(cid, packet)

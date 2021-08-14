@@ -1,7 +1,7 @@
 import socket
 from threading import Thread
 import time
-import pycharon.com
+import iris.com
 
 class Client:
     def __init__(self):
@@ -18,14 +18,14 @@ class Client:
         handle_packets_caller_thread.start()
 
     def send(self, data):
-        pycharon.com.send(self.socket, data)
+        iris.com.send(self.socket, data)
 
     def __handle_packets_caller(self):
         while self.connected:
             self.__handle_packets()
 
     def __handle_packets(self):
-        packets = pycharon.com.recv(self.socket)
+        packets = iris.com.recv(self.socket)
         if packets != []:
             for packet in packets:
                 self.on_packet(packet)
